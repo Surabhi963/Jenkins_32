@@ -1,0 +1,135 @@
+#  Assignment 4
+
+---
+
+## Objective
+To configure multiple Jenkins agent nodes (Ubuntu, RHEL, and CentOS) and manage build distribution across them.  
+Jobs should execute on agent nodes during business hours (9 AM – 6 PM) and on the master node otherwise.
+
+---
+
+
+## 1. CentOS Node Configuration
+
+### Method Used:
+Launch slave agents via SSH
+
+### Configuration Details:
+- Node Name: `CentOS-Node`
+- Number of Executors: `3`
+- Assigned Label: `assignment3`
+- Assigned Job: `Assignment 3`
+- Description:  
+  SSH-based Jenkins agent setup for CentOS build execution.
+
+### Cent-OS Screenshot(s):
+<img width="1370" height="492" alt="Screenshot 2025-10-27 144345" src="https://github.com/user-attachments/assets/bf33fab5-0db2-46ec-85de-9ab283541729" />
+
+<img width="1555" height="836" alt="Screenshot 2025-10-27 134323" src="https://github.com/user-attachments/assets/dcd6b5e2-8972-47d2-a2fc-d95d30697422" />
+
+<img width="1264" height="459" alt="image" src="https://github.com/user-attachments/assets/a6cd494c-1e35-4333-90fd-9887a78aa616" />
+
+
+---
+
+## 2. RHEL Node Configuration
+
+### Method Used:
+Launch slave agents via SSH
+
+### Configuration Details:
+- Node Name: `RHEL-Node`
+- Number of Executors: `2`
+- Assigned Label: `assignment2_part2`
+- Assigned Job: `Assignment 2: Part2`
+- Description:  
+  Configured using SSH to connect to a RHEL-based Jenkins agent.
+
+### RHEL Screenshot(s):
+<img width="853" height="577" alt="Screenshot 2025-10-27 175523" src="https://github.com/user-attachments/assets/3c7dbcd1-8caf-45db-ae36-576580c237b8" />
+<img width="1536" height="1024" alt="2e7a6ec7-74b5-48a6-b7c6-8d03ba5b8b1d" src="https://github.com/user-attachments/assets/d14d804d-4c25-477b-8248-2bce05ed1815" />
+
+<img width="1417" height="898" alt="Screenshot 2025-10-27 181930" src="https://github.com/user-attachments/assets/c164903b-1ee1-49d2-8228-5e530e3a350c" />
+
+---
+
+## 3. Ubuntu Node Configuration
+
+### Method Used:
+Execution of a command on the master node
+
+### Configuration Details:
+- Node Name: `Ubuntu-Node`
+- Number of Executors: `5`
+- Assigned Label: `assignment1_part1`
+- Assigned Job: `Assignment 1: Part1`
+- Description:  
+  Configured via “Execute command on the master” method to support Ubuntu workloads.
+
+
+### Ubuntu Screenshot(s):
+<img width="968" height="457" alt="Screenshot 2025-10-27 182207" src="https://github.com/user-attachments/assets/44c06a73-af52-46e0-8e33-890318bcd679" />
+<img width="1106" height="600" alt="Screenshot 2025-10-27 182326" src="https://github.com/user-attachments/assets/d1009882-b64b-4774-9aed-c64b219c0d97" />
+
+<img width="1102" height="292" alt="image" src="https://github.com/user-attachments/assets/071d04d9-e6e7-4bd5-a83f-21d66264c122" />
+
+
+---
+
+## 4. Time-Based Job Execution Logic
+
+### Requirement:
+- Jobs running between 9 AM – 6 PM → execute only on new agent nodes (Ubuntu, RHEL, CentOS)  
+- Jobs running outside that time → execute on the master node
+
+### Implementation (Declarative Pipeline Example):
+
+```groovy
+pipeline {
+    agent none
+    stages {
+        stage('Run Job on Correct Node') {
+            agent {
+                label getLabel()
+            }
+            steps {
+                echo "Running job on appropriate node based on time"
+            }
+        }
+    }
+}
+
+def getLabel() {
+    def hour = new Date().format('H', TimeZone.getTimeZone('IST')) as int
+    if (hour >= 9 && hour < 18) {
+        // Business hours: use agent nodes
+        return 'assignment1_part1 || assignment2_part2 || assignment3'
+    } else {
+        // Non-business hours: use master
+        return 'master'
+    }
+}
+```
+
+
+---
+
+## 5. Verification Summary
+
+| Node Name     | Executors | Launch Method              | Assigned Job           | Status |
+|----------------|------------|----------------------------|------------------------|---------|
+| Ubuntu-Node    | 5          | Execute command on Master  | Assignment 1: Part1    | Verified |
+| RHEL-Node      | 2          | SSH Agent Launch           | Assignment 2: Part2    | Verified |
+| CentOS-Node    | 3          | SSH Agent Launch           | Assignment 3           | Verified |
+| Master Node    | Default    | Built-in Jenkins Master    | Backup Execution Node  | Verified |
+
+---
+
+## 6. Conclusion
+All agent nodes were successfully configured with the required number of executors and assigned labels.  
+Load distribution across nodes works as intended. Time-based job logic ensures that builds run on agent nodes during business hours and revert to the master node during off-hours.
+
+---
+
+
+
